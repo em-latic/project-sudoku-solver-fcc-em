@@ -167,6 +167,8 @@ class SudokuSolver {
       } // Loop A
 
 
+      // SINGLE PROVIDER checks:
+
       // Check the rows for values with unique placings:
       for (let i = 0; i < 81; i += 9) {
         do {
@@ -178,9 +180,7 @@ class SudokuSolver {
 
           for (let j = 0; j < 9; j++) {
             if (solved[i + j] === '.') { // for empty cells, we determine if a value can only be found there (i.e. 'provided by' that element) 
-              solutions[i + j].forEach(num => {
-                rowNums[num]++;
-              });
+              solutions[i + j].forEach(num => { rowNums[num]++; });
             }
           }// loop by col
 
@@ -205,8 +205,94 @@ class SudokuSolver {
           }
         }
         while (valueFound)
-
       }// loop by row
+
+
+      // Check the columns for values with unique placings:
+      for (let i = 0; i < 9; i++) {
+        do {
+          let valueFound = false; // reset flag
+
+          //if (!solved.slice(i, i + 9).includes('.')) continue; // avoid new iteration in fully solved cols
+
+          const colNums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+
+          for (let j = 0; j < 81; j+=9) {
+            if (solved[i + j] === '.') {
+              solutions[i + j].forEach(num => { colNums[num]++; });
+            }
+          }// loop by row
+
+          // Find keys with val=1 (unique occurrences)
+          const uniqueVals = Object.keys(colNums).filter(key => colNums[key] === 1);
+
+          if (uniqueVals.length > 0) {
+            valueFound = true;
+
+            uniqueVals.forEach(val => {
+              for (let j = 0; j < 81; j+=9) {
+                if (solved[i + j] === '.') {
+                  if (solutions[i + j].includes(val)) { // we know value can only be placed here for this col 
+                    solved[i + j] = val; // assign value to cell
+                    solutions[i + j] = [val];
+                    missingCounter--; // decrement # of cells yet to be filled
+                  }
+                }
+              }// loop by row
+            })
+
+          }
+        }
+        while (valueFound)
+      }// loop by column
+
+
+
+      // Check the regions for values with unique placings:
+      for (let i = 0; i < 9; i++) {
+        do {
+          let valueFound = false; // reset flag
+
+          //if (!solved.slice(i, i + 9).includes('.')) continue; // avoid new iteration in fully solved cols
+
+          const regNums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+
+          let regionIndexes = [];
+          for (let j = 0; j < 9; j+=3) {
+            regionIndexes[j] = i*9 + j;
+            regionIndexes[j+1] = i*9 + j+1;
+            regionIndexes[j+2] = i*9 + j+2;
+          }
+
+          regionIndexes.forEach( idx => {
+            if (solved[idx] === '.') {
+              solutions[idx].forEach(num => { regNums[num]++; });
+            }
+          })
+
+          const uniqueVals = Object.keys(regNums).filter(key => regNums[key] === 1);
+
+          if (uniqueVals.length > 0) {
+            valueFound = true;
+
+            uniqueVals.forEach(val => {
+
+              regionIndexes.forEach( idx => {
+                if (solved[idx] === '.') {
+                  if (solutions[idx].includes(val)) { // value can only be placed here for this region 
+                    solved[idx] = val;
+                    solutions[idx] = [val];
+                    missingCounter--;
+                  }
+                }
+              })
+
+            })
+
+          }
+        }
+        while (valueFound)
+      }// loop by region
 
     } // WHILE loop
 
