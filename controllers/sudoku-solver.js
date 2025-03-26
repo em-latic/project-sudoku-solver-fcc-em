@@ -93,18 +93,20 @@ class SudokuSolver {
 
     return true; // indicate the value is possible in this position of the region (not necessarily the correct one)
   }
+  
 
   solve(puzzleString) {
     let solutionSpace = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
     let solutions = [];
 
-    let missingInRow = []
-    let missingInCol = []
-    let missingInReg = []
+    // let missingInRow = []
+    // let missingInCol = []
+    // let missingInReg = []
+
     const nums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
 
-
-    let solved = puzzleString.slice(0);
+    //let solved = puzzleString.slice(0);
+    let solved = puzzleString.split('');
 
     let assignCounter = 0; //tracks how many cells are assigned a value in a given round
     let missingCounter = 9 * 9; // tracks how many values/cells need to be assigned
@@ -122,11 +124,15 @@ class SudokuSolver {
     // check if there are cells in the scope (i.e. row, colunm or region) that are the only place a value can be assigned in
     //function checkUniqueProvider(scope, ) {}
 
+    let solutionsUpdated = false;
+
     // keep trying until all cells have a value
-    while (missingCounter > 0) {
+    do { // this means: if there are still empty cells AND (at least one was assigned in the loop OR a solution space was updated)
+
+      assignCounter = 0; // Reset counter
+      solutionsUpdated = false; // Reset state
 
       // LOOP through the whole puzzle, checking possible solution values for each element/cell (LOOP A)
-      
       for (let i = 0; i < puzzleString.length; i++) {
 
         let current = solved[i];  //puzzleString[i];
@@ -135,52 +141,84 @@ class SudokuSolver {
         const rowNr = Math.floor(i / 9) + 1;
         const colNr = i % 9 + 1;
 
-        assignCounter = 0; // Reset counter
+        //let solutionsUpdated = false; moved UP and used as while loop control
 
-        if (current === '.') {
-          //if(possibleValues.length)
-          for (var val in possibleValues) {
-            // if a 'val' (e.g. 1,5,8) fails 1 check, it is removed from possible solutions
-            let value = possibleValues[val];
-
-            let isValidRow = this.checkRowPlacement(puzzleString, rowNr, colNr, value);
-            let isValidCol = this.checkColPlacement(puzzleString, rowNr, colNr, value);
-            let isValidReg = this.checkRegionPlacement(puzzleString, rowNr, colNr, value);
-
-            if (!isValidRow || !isValidCol || !isValidReg) {
-              if (solutions[i].length === 1) {
-                // this means the last possible value is also invalid
-                return 'No solution';
+        //do{
+          if (current === '.') {
+            //solutionsUpdated = false; //Moved UP
+  
+            for (var val in possibleValues) {
+              // if a 'val' (e.g. 1,5,8) fails 1 check, it is removed from possible solutions
+              let value = possibleValues[val];
+              let index = solutions[i].indexOf(value);
+  
+              let isValidRow = this.checkRowPlacement(solved, rowNr, colNr, value); // 'solved' instead of 'puzzleString'
+              let isValidCol = this.checkColPlacement(solved, rowNr, colNr, value);
+              let isValidReg = this.checkRegionPlacement(solved, rowNr, colNr, value);
+  
+              if (!isValidRow || !isValidCol || !isValidReg) {
+                if (solutions[i].length === 1) {
+  
+                  console.log(`Cell # is ${i} and its last possible solution is ${solutions[i]}`);
+                  console.log(`This is the solution so far ${solved} `);
+  
+                  // this means the last possible value is also invalid
+                  return "No solution";
+                }
+                //let invalidVal = solutions[i].splice(val, 1); // remove from list of options for this cell
+                let invalidVal = solutions[i].splice(index, 1);
+                solutionsUpdated = true;
+  
+                //////// DEBUG
+                //
+                    // if(i==13) {
+                    //   //console.log(`The cell is ${i}`);
+                    //   console.log(`Invalid value: ${invalidVal}`);
+                    //   console.log(`Possible remaining : ${solutions[i]}`);
+                    // }
+                ///////
               }
-              let invalidVal = solutions[i].splice(val, 1); // remove from list of options for this cell
-            }
-            else if (solutions[i].length === 1) { // only 1 possible value left, and it is also valid
-              solved[i] = value;
-              solutions[i] = value;
-              assignCounter++; // increment the # of solutions found in this round
-              missingCounter--;
-            }
+              else if (solutions[i].length === 1) { // only 1 possible value left, and it is also valid
+                solved[i] = value;
+                //solutions[i] = value;
+                assignCounter++; // increment the # of solutions found in this round
+                missingCounter--;
 
+                //DEBUG:
+                console.log(`Assigning value [${value}] to cell [${i}], corresponds to row [${rowNr}], col[${colNr}]  - Solutions were: ${solutions[i]} `);
+              }
+  
+            }
           }
-        }
+        //}
+        //while(solutionsUpdated)
+        
 
       } // Loop A
 
 
       // SINGLE PROVIDER checks:
 
+      //  /*
+
       // Check the rows for values with unique placings:
       for (let i = 0; i < 81; i += 9) {
+        let valueFound;
+
         do {
-          let valueFound = false; // reset flag
+          valueFound = false; // reset flag
 
           if (!solved.slice(i, i + 9).includes('.')) continue; // avoid new iteration in fully solved rows
 
           const rowNums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+          let rowValues = [];
 
           for (let j = 0; j < 9; j++) {
             if (solved[i + j] === '.') { // for empty cells, we determine if a value can only be found there (i.e. 'provided by' that element) 
               solutions[i + j].forEach(num => { rowNums[num]++; });
+            }
+            else {
+              rowValues.push(solved[i+j]); // add to tracking array
             }
           }// loop by col
 
@@ -188,15 +226,31 @@ class SudokuSolver {
           const uniqueVals = Object.keys(rowNums).filter(key => rowNums[key] === 1);
 
           if (uniqueVals.length > 0) {
-            valueFound = true;
+            //valueFound = true;
 
             uniqueVals.forEach(val => {
               for (let j = 0; j < 9; j++) {
                 if (solved[i + j] === '.') {
-                  if (solutions[i + j].includes(val)) { // this meams this solution array contains the value, which we know can only be placed here for this row 
+
+                  let rowNr = Math.floor((i + j)/9 + 1);
+                  let colNr = (i + j) % 9 + 1;
+
+                  // this ensures this solution array contains the value, which we know can only be placed here for this row (and also we still need this value)
+                  if (solutions[i + j].includes(val) 
+                    && !rowValues.includes(val)
+                    && this.checkColPlacement(solved, rowNr, colNr, val) //added checks for MASTER level
+                    && this.checkRegionPlacement(solved, rowNr, colNr, val)
+                  ) 
+                  { 
+                    valueFound = true;
+
                     solved[i + j] = val; // assign value to cell
-                    solutions[i + j] = [val];
+                    //solutions[i + j] = [val];
                     missingCounter--; // decrement # of cells yet to be filled
+                    assignCounter++;
+
+                    //DEBUG:
+                    console.log(`ROW Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
                   }
                 }
               }// loop by col
@@ -210,16 +264,21 @@ class SudokuSolver {
 
       // Check the columns for values with unique placings:
       for (let i = 0; i < 9; i++) {
+        let valueFound;
         do {
-          let valueFound = false; // reset flag
+          valueFound = false; // reset flag
 
           //if (!solved.slice(i, i + 9).includes('.')) continue; // avoid new iteration in fully solved cols
 
           const colNums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+          let colValues = [];
 
           for (let j = 0; j < 81; j+=9) {
             if (solved[i + j] === '.') {
               solutions[i + j].forEach(num => { colNums[num]++; });
+            }
+            else{
+              colValues.push(solved[i + j]); // the value is already assigned, so we add to tracking array 
             }
           }// loop by row
 
@@ -227,15 +286,33 @@ class SudokuSolver {
           const uniqueVals = Object.keys(colNums).filter(key => colNums[key] === 1);
 
           if (uniqueVals.length > 0) {
-            valueFound = true;
+            //valueFound = true; **might be causng infinite loop, since solutions space is not updated with new assignments
 
             uniqueVals.forEach(val => {
               for (let j = 0; j < 81; j+=9) {
                 if (solved[i + j] === '.') {
-                  if (solutions[i + j].includes(val)) { // we know value can only be placed here for this col 
+
+                  let rowNr = Math.floor((i + j)/9 + 1);
+                  let colNr = (i + j) % 9 + 1;
+
+                  // we ensure value can only be placed here for this col & that we still dont have it assigned in this column
+                  if (
+                    solutions[i + j].includes(val) 
+                    && !colValues.includes(val)
+                    && this.checkRowPlacement(solved, rowNr, colNr, val) //added checks for MASTER level
+                    && this.checkRegionPlacement(solved, rowNr, colNr, val)
+                  ) 
+                  { 
+                    valueFound = true;
+
                     solved[i + j] = val; // assign value to cell
                     solutions[i + j] = [val];
+
                     missingCounter--; // decrement # of cells yet to be filled
+                    assignCounter++;
+
+                    //DEBUG:
+                    console.log(`COL Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
                   }
                 }
               }// loop by row
@@ -247,15 +324,17 @@ class SudokuSolver {
       }// loop by column
 
 
-
       // Check the regions for values with unique placings:
       for (let i = 0; i < 9; i++) {
+        
+        let valueFound;
         do {
-          let valueFound = false; // reset flag
+          valueFound = false; // reset flag
 
           //if (!solved.slice(i, i + 9).includes('.')) continue; // avoid new iteration in fully solved cols
 
           const regNums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+          let regValues = [];
 
           let regionIndexes = [];
           for (let j = 0; j < 9; j+=3) {
@@ -268,21 +347,41 @@ class SudokuSolver {
             if (solved[idx] === '.') {
               solutions[idx].forEach(num => { regNums[num]++; });
             }
+            else {
+              regValues.push(solved[idx]);
+            }
           })
 
           const uniqueVals = Object.keys(regNums).filter(key => regNums[key] === 1);
 
           if (uniqueVals.length > 0) {
-            valueFound = true;
+            //valueFound = true;
 
             uniqueVals.forEach(val => {
 
               regionIndexes.forEach( idx => {
                 if (solved[idx] === '.') {
-                  if (solutions[idx].includes(val)) { // value can only be placed here for this region 
+
+                  let rowNr = Math.floor((idx)/9 + 1);
+                  let colNr = (idx) % 9 + 1;
+
+                  // Ensure value can only be placed here for this region & we still need it
+                  if (
+                    solutions[idx].includes(val) 
+                    && !regValues.includes(val)
+                    && this.checkRowPlacement(solved, rowNr, colNr, val)
+                    && this.checkColPlacement(solved, rowNr, colNr, val)
+                  ) 
+                  { 
+                    valueFound = true;
+
                     solved[idx] = val;
-                    solutions[idx] = [val];
+                    //solutions[idx] = [val];
                     missingCounter--;
+                    assignCounter++;
+
+                    //DEBUG:
+                    console.log(`REGION Provider: Assigning Value [${val}] to Cell [${idx}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[idx]}`);
                   }
                 }
               })
@@ -293,10 +392,20 @@ class SudokuSolver {
         }
         while (valueFound)
       }// loop by region
+      
+      //  */
+
+      // if(assignCounter === 0) {
+      //   console.log(`Puzzle not solved completely ${solved}`);
+      //   return solved.join('');
+      // }
 
     } // WHILE loop
+    while (missingCounter > 0 && (assignCounter > 0 || solutionsUpdated) ) 
 
+    if(missingCounter > 0) console.log(`Puzzle not solved completely ${solved}`);
 
+    return solved.join('');
   }// solve()
 
 }
