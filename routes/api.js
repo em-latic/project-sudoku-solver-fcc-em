@@ -12,8 +12,19 @@ module.exports = function (app) {
       const coordinate = req.body.coordinate;
       const value = req.body.value;
 
+      if(!puzzle || !coordinate || !value) {
+        return res.json({ error: 'Required field(s) missing' });
+      }
+
       if(puzzle.length !== 81){
         return res.json({ error: "Expected puzzle to be 81 characters long" });
+      }
+
+      const allowedVals = /^[1-9]|\.$/;
+      for(let i =0; i<puzzle.length; i++){
+        if(!allowedVals.test(i)){
+          return res.json({ error: "Invalid characters in puzzle" });
+        }
       }
 
       const coordRegex = /^[a-iA-I][1-9]$/;
@@ -53,12 +64,24 @@ module.exports = function (app) {
 
       const puzzle = req.body.puzzle;
 
+      if(!puzzle) {
+        return res.json({ error: 'Required field(s) missing' });
+      }
+
       if(puzzle.length !== 81){
+        //console.log(puzzle.length)
         return res.json({ error: "Expected puzzle to be 81 characters long" });
       }
 
+      const allowedVals = /^[1-9]|\.$/;
+      for(let i =0; i<puzzle.length; i++){
+        if(!allowedVals.test(puzzle[i])){
+          return res.json({ error: "Invalid characters in puzzle" });
+        }
+      }
+
       const solution = solver.solve(puzzle);
-      if(solution === "No solution"){
+      if(!solution){   //solution === "No solution"
         return res.json({ error : "Puzzle cannot be solved" });
       }
 

@@ -1,6 +1,24 @@
 class SudokuSolver {
 
   validate(puzzleString) {
+
+    if(puzzleString.length !== 81) { 
+      console.log('Wrong size of puzzle');
+      return false;
+    }
+
+    const allowedVals = /[1-9]|\./;
+    for(let i = 0; i<puzzleString.length; i++){
+      if(!allowedVals.test(puzzleString[i])){
+        console.log(`Invalid characters in puzzle: ${puzzleString[i]}`);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  checkSolution(puzzleString) {
     let isValid = true;
 
     const digitSum = 1+2+3+4+5+6+7+8+9; // should be 45
@@ -99,11 +117,11 @@ class SudokuSolver {
     let solutionSpace = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
     let solutions = [];
 
-    // let missingInRow = []
-    // let missingInCol = []
-    // let missingInReg = []
+    if(!this.validate(puzzleString)) {
+      return false;
+    }
 
-    const nums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
+    //const nums = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0 };
 
     //let solved = puzzleString.slice(0);
     let solved = puzzleString.split('');
@@ -163,7 +181,8 @@ class SudokuSolver {
                   console.log(`This is the solution so far ${solved} `);
   
                   // this means the last possible value is also invalid
-                  return "No solution";
+                  console.log('No solution');
+                  return false;   //"No solution";
                 }
                 //let invalidVal = solutions[i].splice(val, 1); // remove from list of options for this cell
                 let invalidVal = solutions[i].splice(index, 1);
@@ -185,7 +204,7 @@ class SudokuSolver {
                 missingCounter--;
 
                 //DEBUG:
-                console.log(`Assigning value [${value}] to cell [${i}], corresponds to row [${rowNr}], col[${colNr}]  - Solutions were: ${solutions[i]} `);
+                //console.log(`Assigning value [${value}] to cell [${i}], corresponds to row [${rowNr}], col[${colNr}]  - Solutions were: ${solutions[i]} `);
               }
   
             }
@@ -250,7 +269,7 @@ class SudokuSolver {
                     assignCounter++;
 
                     //DEBUG:
-                    console.log(`ROW Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
+                    //console.log(`ROW Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
                   }
                 }
               }// loop by col
@@ -312,7 +331,7 @@ class SudokuSolver {
                     assignCounter++;
 
                     //DEBUG:
-                    console.log(`COL Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
+                    //console.log(`COL Provider: Assigning Value [${val}] to Cell [${i+j}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[i + j]}`);
                   }
                 }
               }// loop by row
@@ -381,7 +400,7 @@ class SudokuSolver {
                     assignCounter++;
 
                     //DEBUG:
-                    console.log(`REGION Provider: Assigning Value [${val}] to Cell [${idx}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[idx]}`);
+                    //console.log(`REGION Provider: Assigning Value [${val}] to Cell [${idx}] in ROW [${rowNr}], COL[${colNr}] - Solutions were: ${solutions[idx]}`);
                   }
                 }
               })
