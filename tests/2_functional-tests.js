@@ -7,6 +7,8 @@ chai.use(chaiHttp);
 
 suite('Functional Tests', () => {
 
+    // 'API: solve' functional Tests
+    //
     // Solve a puzzle with valid puzzle string: POST request to /api/solve
     test("1 - Solve valid puzzle API", (done) => {
         chai
@@ -76,16 +78,141 @@ suite('Functional Tests', () => {
             done();
         });
     })
+
+
+    // 'API: check' functional Tests
+    //
     // Check a puzzle placement with single placement conflict: POST request to /api/check
+    test("7 - Check placement with 1 conflict API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '5..91372.3...8.5.9.9.25..8.68.47.23...95..46.7.4.....5.2.......4..8916..85.72...3', 
+            coordinate: 'A2', 
+            value: 7 
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { valid: false, conflict: ["row"] });
+            done();
+        })
+    });
+
     // Check a puzzle placement with multiple placement conflicts: POST request to /api/check
+    test("8 - Check placement with multiple conflicts API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '5..91372.3...8.5.9.9.25..8.68.47.23...95..46.7.4.....5.2.......4..8916..85.72...3', 
+            coordinate: 'b2', 
+            value: 8 
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { valid: false, conflict: ["row", "column"] });
+            done();
+        })
+    });
+
     // Check a puzzle placement with all placement conflicts: POST request to /api/check
+    test("9 - Check placement with all conflicts API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '5..91372.3...8.5.9.9.25..8.68.47.23...95..46.7.4.....5.2.......4..8916..85.72...3', 
+            coordinate: 'b2', 
+            value: 5 
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { valid: false, conflict: ["row", "column", "region"] });
+            done();
+        })
+    });
+
     // Check a puzzle placement with missing required fields: POST request to /api/check
+    test("10 - Check placement with missing fields API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '..839.7.575.....964..1.......16.29846.9.312.7..754.....62..5.78.8...3.2...492...1', 
+            coordinate: 'A1',
+            value: ""
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { error: "Required field(s) missing" });
+            done();
+        })
+    });
+
     // Check a puzzle placement with invalid characters: POST request to /api/check
+    test("11 - Check placement in puzzle with invalid characters API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '..839.7.575..X..964..1.......16.29846.9.312.7..754.....62..5.78.8...3.2...492...1', 
+            coordinate: 'A1',
+            value: "1"
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { error: "Invalid characters in puzzle" });
+            done();
+        })
+    });
     // Check a puzzle placement with incorrect length: POST request to /api/check
+    test("12 - Check placement in puzzle of incorrect length API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '839.7.575.....964..1.......16.29846.9.312.7..754.....62..5.78.8...3.2...492', 
+            coordinate: 'A1',
+            value: "1"
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { error: "Expected puzzle to be 81 characters long" });
+            done();
+        })
+    });
     // Check a puzzle placement with invalid placement coordinate: POST request to /api/check
+    test("13 - Check placement with invalid coordinate API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '..839.7.575.....964..1.......16.29846.9.312.7..754.....62..5.78.8...3.2...492...1', 
+            coordinate: 'X10',
+            value: "5"
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { error: "Invalid coordinate" });
+            done();
+        })
+    });
     // Check a puzzle placement with invalid placement value: POST request to /api/check
-
-    
-
+    test("14 - Check placement with invalid value API", (done) => {
+        chai
+        .request(server)
+        .post('/api/check')
+        .send(
+            { 
+            puzzle: '..839.7.575.....964..1.......16.29846.9.312.7..754.....62..5.78.8...3.2...492...1', 
+            coordinate: 'a1',
+            value: "10"
+        })
+        .end((err, res) => {
+            assert.deepEqual(res.body, { error: "Invalid value" });
+            done();
+        })
+    });
 });
 

@@ -22,7 +22,7 @@ module.exports = function (app) {
 
       const allowedVals = /^[1-9]|\.$/;
       for(let i =0; i<puzzle.length; i++){
-        if(!allowedVals.test(i)){
+        if(!allowedVals.test(puzzle[i])){
           return res.json({ error: "Invalid characters in puzzle" });
         }
       }
