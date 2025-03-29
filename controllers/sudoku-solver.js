@@ -104,8 +104,9 @@ class SudokuSolver {
 
     //loop to check region for duplicate with 'value'
     for(let i=0; i<9; i++){
+      //if(regionValues[i] == '8') console.log(`Region Check: The rowFactor is ${rowFactor} and col is ${colFactor}`);
       if(regionValues[i] === '.') continue; // no value has been assigned yet to cell -> '.'
-      //if( i === rowFactor + columnFactor - 1 ) continue; //is the same cell we are checking, but it should be '.' at this point?
+      if( i === rowFactor*3 + colFactor ) continue; //is the same cell we are checking
       if(value == regionValues[i]) return false; // the same value already exists in the region
     }
 

@@ -27,7 +27,7 @@ suite('Functional Tests', () => {
         .post('/api/solve')
         .send({ puzzle: '' })
         .end((err, res) => {
-            assert.deepEqual(res.body, { error: 'Required field(s) missing' });
+            assert.deepEqual(res.body, { error: 'Required field missing' });
             done();
         });
     })

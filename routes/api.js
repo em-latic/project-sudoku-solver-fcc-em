@@ -65,7 +65,7 @@ module.exports = function (app) {
       const puzzle = req.body.puzzle;
 
       if(!puzzle) {
-        return res.json({ error: 'Required field(s) missing' });
+        return res.json({ error: 'Required field missing' });
       }
 
       if(puzzle.length !== 81){
